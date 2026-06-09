@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Jogo de tiro acessível com mira pelos olhos - Temática de parque de diversões com patos">
+  <meta name="keywords" content="jogo acessível, eye tracking, tiro ao alvo, patos, parque de diversões">
+  <title> Duck of Duty</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/x-icon" href="assets/duck_of_duty.png">
+</head>
+
+<body>
+
+  <!-- Hidden webcam video -->
+  <video id="webcam-video" autoplay playsinline></video>
+
+  <!-- ==========================================
+       TELA 1 — INÍCIO
+       ========================================== -->
+  <section id="start-screen" class="screen active">
+    <!-- Star background (if needed) -->
+    <div class="stars"></div>
+
+    <div class="carnival-lights"></div>
+
+    <div class="booth-frame">
+      <div class="booth-content">
+        <h1 class="game-title">🎯 Duck of Duty</h1>
+        <p class="game-subtitle">Mire com os olhos e atire com uma piscada!</p>
+
+        <img src="assets/duck.png" alt="Pato alvo do jogo" class="start-duck" id="start-duck">
+
+        <button id="btn-start" class="btn-start">Iniciar Jogo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       TELA 2 — CALIBRAÇÃO
+       ========================================== -->
+  <section id="calibration-screen" class="screen">
+    <div class="calibration-instructions" style="display: flex; flex-direction: column; align-items: center;">
+      <h2>🎯 Calibração do Olhar</h2>
+      <p>
+        Para que sua mira funcione corretamente, precisamos calibrar
+        o rastreamento dos seus olhos. Você verá pontos aparecerem
+        nos cantos da tela.
+      </p>
+      <p>
+        <strong>Olhe fixamente para cada ponto</strong> por alguns segundos.
+        A calibração acontecerá automaticamente.
+      </p>
+      <div class="tip">
+        Dicas: Encaixe seu rosto e ombros dentro da linha pontilhada no vídeo abaixo.
+        A linha ficará VERDE quando sua posição estiver impecável.
+      </div>
+
+      <!-- Centralized webcam preview with face guide -->
+      <div class="webcam-preview" id="webcam-preview-container">
+        <video id="webcam-preview-video" autoplay playsinline muted></video>
+        <div class="face-guide guide-red" id="face-guide"></div>
+      </div>
+
+      <button id="btn-calibrate" class="btn-calibrate" style="opacity: 0.5; cursor: not-allowed;">Aguardando
+        Posicionamento...</button>
+    </div>
+
+    <!-- Calibration points (positioned dynamically) -->
+
+    <div class="calibration-status" id="calibration-status"></div>
+    <div class="calibration-progress">
+      <div class="calibration-progress-bar" id="calibration-progress-bar"></div>
+    </div>
+
+    <!-- Blink Calibration UI -->
+    <div id="blink-calib-ui"
+      style="display: none; position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align: center; z-index:20; background: rgba(0,0,0,0.85); padding: 40px; border-radius: 20px; border: 2px solid var(--carnival-gold); flex-direction: column; align-items: center; justify-content: center; width: 80%; max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+      <h2
+        style="color: var(--carnival-gold); font-family: var(--font-title); font-size: 2.2rem; margin-bottom: 20px; text-shadow: 2px 2px 0 var(--dark-wood);">
+        Calibrando Piscada...</h2>
+      <p id="blink-calib-inst" style="color: white; font-size: 1.3rem; margin-bottom: 30px; line-height: 1.5;">Pisque
+        rapidamente apenas o olho <strong>DIREITO</strong> algumas vezes</p>
+      <div id="blink-calib-icon"
+        style="font-size: 6rem; animation: pulse 1s infinite; line-height: 1; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">
+        😉</div>
+    </div>
+
+    <!-- Distance feedback indicator -->
+    <div class="distance-feedback" id="distance-feedback">
+      <span class="distance-icon" id="distance-icon">📏</span>
+      <span class="distance-text" id="distance-text">Verificando distância...</span>
+    </div>
+
+    <!-- Status indicators removed, using webcam interface directly -->
+  </section>
+
+  <!-- ==========================================
+       TELA 3 — JOGO
+       ========================================== -->
+  <section id="game-screen" class="screen">
+    <!-- Booth background -->
+    <div class="booth-bg">
+      <div class="canopy"></div>
+      <div class="pillar-left"></div>
+      <div class="pillar-right"></div>
+      <div class="back-wall"></div>
+      <div class="duck-shelf duck-shelf-1"></div>
+      <div class="duck-shelf duck-shelf-2"></div>
+      <div class="duck-shelf duck-shelf-3"></div>
+      <div class="counter"></div>
+      <div class="game-lights"></div>
+    </div>
+
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hud-section">
+        <span class="hud-label">Patos</span>
+        <span class="hud-value" id="hud-score">0</span>
+      </div>
+      <div class="hud-section">
+        <span class="hud-label">Munição</span>
+        <div class="ammo-container" id="ammo-container"></div>
+      </div>
+      <div class="hud-section">
+        <span class="hud-label">Tempo</span>
+        <span class="hud-value" id="hud-timer">1:00</span>
+      </div>
+    </div>
+
+    <!-- Duck rows -->
+    <div class="duck-row duck-row-1" id="duck-row-1"></div>
+    <div class="duck-row duck-row-2" id="duck-row-2"></div>
+    <div class="duck-row duck-row-3" id="duck-row-3"></div>
+
+    <!-- Crosshair -->
+    <div class="crosshair" id="crosshair">
+      <div class="crosshair-circle"></div>
+      <div class="crosshair-dot"></div>
+    </div>
+
+    <!-- Shot flash overlay -->
+    <div class="shot-flash" id="shot-flash"></div>
+
+    <!-- Notifications -->
+    <div class="notification" id="notification"></div>
+    <div class="reload-warning" id="reload-warning">
+      ⚠️ ARMA VAZIA — Pisque o olho esquerdo para recarregar!
+    </div>
+
+    <!-- Distance feedback in game -->
+    <div class="distance-feedback distance-feedback-game" id="distance-feedback-game">
+      <span class="distance-icon" id="distance-icon-game">📏</span>
+      <span class="distance-text" id="distance-text-game"></span>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       TELA 4 — RESULTADOS
+       ========================================== -->
+  <section id="results-screen" class="screen">
+    <div class="results-card">
+      <img src="assets/duck.png" alt="Pato" class="results-duck-icon">
+      <h2 class="results-title">Fim de Jogo!</h2>
+
+      <div class="results-row">
+        <span class="results-label">🦆 Patos acertados</span>
+        <span class="results-value good" id="result-score">0</span>
+      </div>
+      <div class="results-row">
+        <span class="results-label">💨 Tiros errados</span>
+        <span class="results-value bad" id="result-missed">0</span>
+      </div>
+      <div class="results-row">
+        <span class="results-label">🔫 Total de tiros</span>
+        <span class="results-value neutral" id="result-total">0</span>
+      </div>
+      <div class="results-row">
+        <span class="results-label">🎯 Precisão</span>
+        <span class="results-value neutral" id="result-accuracy">0%</span>
+      </div>
+
+      <button id="btn-restart" class="btn-restart">Jogar Novamente</button>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       LOADING OVERLAY
+       ========================================== -->
+  <div class="loading-overlay hidden" id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <span class="loading-text" id="loading-text">Carregando...</span>
+  </div>
+
+  <!-- MediaPipe FaceMesh -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+  <!-- Scripts -->
+  <script src="js/oneEuroFilter.js"></script>
+  <script src="js/eyeTracker.js"></script>
+  <script src="js/calibration.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>
